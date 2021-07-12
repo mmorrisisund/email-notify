@@ -1,39 +1,12 @@
 import { Fragment, useState } from 'react'
 import { Transition, Dialog } from '@headlessui/react'
+import { useQuery, useQueryClient, useMutation } from 'react-query'
+import axios from 'axios'
 
-const distributions = [
-  {
-    id: 1,
-    name: 'Late Pricing',
-    addresses: [
-      { id: 1, address: 'late_pricing@example.com' },
-      { id: 2, address: 'notify@example.com' },
-      { id: 3, address: 'advisor@example.com' },
-    ],
-  },
-  {
-    id: 2,
-    name: 'Price Error',
-    addresses: [
-      { id: 3, address: 'advisor@example.com' },
-      { id: 1, address: 'late_pricing@example.com' },
-      { id: 2, address: 'notify@example.com' },
-    ],
-  },
-  {
-    id: 3,
-    name: 'Shareholder Notification',
-    addresses: [
-      { id: 2, address: 'notify@example.com' },
-      { id: 3, address: 'advisor@example.com' },
-      { id: 1, address: 'late_pricing@example.com' },
-    ],
-  },
-]
 const getId = () => Math.round(Math.random() * 10000)
 
 export function EmailAdminPage() {
-  const [lists, setLists] = useState(distributions)
+  const queryClient = useQueryClient()
   const [selectedList, setSelectedList] = useState(undefined)
   const [listAddIsOpen, setListAddIsOpen] = useState(false)
   const [listName, setListName] = useState('')
@@ -42,18 +15,56 @@ export function EmailAdminPage() {
   const [email, setEmail] = useState('')
   const [priorEmail, setPriorEmail] = useState('')
 
+  const {
+    data: lists,
+    isLoading,
+    isError,
+  } = useQuery('lists', async () => {
+    const { data } = await axios.get('/lists')
+    return data
+  })
+
+  const addListMutation = useMutation(
+    async (newList) => await axios.post('/lists', newList),
+    {
+      onSuccess: ({ data }) => {
+        queryClient.setQueryData(['lists'], (oldData) => [...oldData, data])
+      },
+    }
+  )
+  const removeListMutation = useMutation((id) => axios.delete(`/lists/${id}`), {
+    onSuccess: (data, vars) => {
+      queryClient.setQueryData(['lists'], (oldData) =>
+        oldData.filter((list) => list.id !== vars)
+      )
+    },
+  })
+  const updateListMutation = useMutation(
+    async (list) => {
+      const { data } = await axios.put(`lists/${list.id}`, list)
+      return data
+    },
+    {
+      onSuccess: (data, vars) => {
+        queryClient.setQueryData(['lists'], (oldData) =>
+          oldData.map((list) => (list.id === vars.id ? vars : list))
+        )
+      },
+    }
+  )
+
   const handleListSelect = (id) => {
     setSelectedList(lists.find((list) => list.id === id))
   }
   const handleListRemove = (id) => {
-    if (selectedList.id === id) {
+    if (selectedList?.id === id) {
       setSelectedList(undefined)
     }
-    setLists(lists.filter((list) => list.id !== id))
+    removeListMutation.mutate(id)
   }
 
   const handleListAddSubmit = (name) => {
-    setLists([...lists, { id: getId(), name, addresses: [] }])
+    addListMutation.mutate({ name, addresses: [] })
     setListName('')
     setListAddIsOpen(false)
   }
@@ -67,9 +78,10 @@ export function EmailAdminPage() {
       (email) => email.id !== id
     )
     const newList = { ...selectedList, addresses: newEmailList }
-    setLists(
-      lists.map((list) => (list.id === selectedList.id ? newList : list))
-    )
+    updateListMutation.mutate(newList)
+    // setLists(
+    //   lists.map((list) => (list.id === selectedList.id ? newList : list))
+    // )
     setSelectedList(newList)
   }
 
@@ -92,13 +104,7 @@ export function EmailAdminPage() {
         ...selectedList,
         addresses: [...selectedList.addresses, ...newAddresses],
       }
-      const oldListIndex = lists.findIndex(
-        (list) => list.id === selectedList.id
-      )
-      const listsCopy = [...lists]
-      listsCopy.splice(oldListIndex, 1, newList)
-
-      setLists(listsCopy)
+      updateListMutation.mutate(newList)
       setSelectedList(newList)
     }
 
@@ -118,12 +124,10 @@ export function EmailAdminPage() {
     const newEmail = { ...selectedList.addresses[emailIndex], address: email }
     const newAddresses = [...selectedList.addresses]
     newAddresses.splice(emailIndex, 1, newEmail)
-    const listIndex = lists.findIndex((list) => list.id === selectedList.id)
-    const listsCopy = [...lists]
-    listsCopy.splice(listIndex, 1, { ...selectedList, addresses: newAddresses })
+    const newList = { ...selectedList, addresses: newAddresses }
+    updateListMutation.mutate(newList)
 
-    setLists(listsCopy)
-    setSelectedList(listsCopy[listIndex])
+    setSelectedList(newList)
     setPriorEmail('')
     setEmail('')
     setEmailEditIsOpen(false)
@@ -160,32 +164,34 @@ export function EmailAdminPage() {
                   </tr>
                 </thead>
                 <tbody className='bg-white divide-y divide-gray-200'>
-                  {lists.map((list) => (
-                    <tr
-                      key={list.id}
-                      className={`${
-                        list.id === selectedList?.id ? 'bg-blue-100' : ''
-                      }`}
-                    >
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-                        <button
-                          className='w-full text-left'
-                          onClick={() => handleListSelect(list.id)}
-                        >
-                          {list.name}
-                        </button>
-                      </td>
+                  {!isLoading &&
+                    !isError &&
+                    lists.map((list) => (
+                      <tr
+                        key={list.id}
+                        className={`${
+                          list.id === selectedList?.id ? 'bg-blue-100' : ''
+                        }`}
+                      >
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+                          <button
+                            className='w-full text-left'
+                            onClick={() => handleListSelect(list.id)}
+                          >
+                            {list.name}
+                          </button>
+                        </td>
 
-                      <td className='px-6 py-4 whitespace-nowrap text-center text-sm font-medium'>
-                        <button
-                          className='text-red-600 hover:text-red-900'
-                          onClick={() => handleListRemove(list.id)}
-                        >
-                          Remove
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                        <td className='px-6 py-4 whitespace-nowrap text-center text-sm font-medium'>
+                          <button
+                            className='text-red-600 hover:text-red-900'
+                            onClick={() => handleListRemove(list.id)}
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
