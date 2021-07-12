@@ -1,7 +1,9 @@
-import { Fragment, useState } from 'react'
-import { Transition, Dialog } from '@headlessui/react'
+import { useState } from 'react'
 import { useQuery, useQueryClient, useMutation } from 'react-query'
 import axios from 'axios'
+
+import AddEditDialog from 'components/Dialogs/AddEditDialog'
+import EmailAddressTable from 'components/Tables/EmailAddressTable'
 
 const getId = () => Math.round(Math.random() * 10000)
 
@@ -9,10 +11,8 @@ export function EmailAdminPage() {
   const queryClient = useQueryClient()
   const [selectedList, setSelectedList] = useState(undefined)
   const [listAddIsOpen, setListAddIsOpen] = useState(false)
-  const [listName, setListName] = useState('')
   const [emailAddIsOpen, setEmailAddIsOpen] = useState(false)
   const [emailEditIsOpen, setEmailEditIsOpen] = useState(false)
-  const [email, setEmail] = useState('')
   const [priorEmail, setPriorEmail] = useState('')
 
   const {
@@ -64,13 +64,8 @@ export function EmailAdminPage() {
   }
 
   const handleListAddSubmit = (name) => {
+    setListAddIsOpen(false)
     addListMutation.mutate({ name, addresses: [] })
-    setListName('')
-    setListAddIsOpen(false)
-  }
-  const handleListAddCancel = () => {
-    setListName('')
-    setListAddIsOpen(false)
   }
 
   const handleEmailRemove = (id) => {
@@ -79,15 +74,11 @@ export function EmailAdminPage() {
     )
     const newList = { ...selectedList, addresses: newEmailList }
     updateListMutation.mutate(newList)
-    // setLists(
-    //   lists.map((list) => (list.id === selectedList.id ? newList : list))
-    // )
     setSelectedList(newList)
   }
 
-  const handleEmailAddSubmit = (e) => {
-    e.preventDefault()
-    const emails = e.target.email.value.split(',')
+  const handleEmailAddSubmit = (value) => {
+    const emails = value.split(',')
 
     const uniqueEmails = emails.filter(
       (email) =>
@@ -108,18 +99,16 @@ export function EmailAdminPage() {
       setSelectedList(newList)
     }
 
-    setEmail('')
     setEmailAddIsOpen(false)
   }
   const handleEmailAddCancel = () => {
-    setEmail('')
     setEmailAddIsOpen(false)
   }
-  const handleEmailEditSubmit = (e) => {
-    e.preventDefault()
-    const email = e.target.email.value
+
+  const handleEmailEditSubmit = (prevValue, newValue) => {
+    const email = newValue
     const emailIndex = selectedList.addresses.findIndex(
-      ({ address }) => address === priorEmail
+      ({ address }) => address === prevValue
     )
     const newEmail = { ...selectedList.addresses[emailIndex], address: email }
     const newAddresses = [...selectedList.addresses]
@@ -128,12 +117,9 @@ export function EmailAdminPage() {
     updateListMutation.mutate(newList)
 
     setSelectedList(newList)
-    setPriorEmail('')
-    setEmail('')
     setEmailEditIsOpen(false)
   }
   const handleEmailEditCancel = () => {
-    setEmail('')
     setEmailEditIsOpen(false)
   }
 
@@ -199,7 +185,9 @@ export function EmailAdminPage() {
         </div>
       </div>
 
-      <div className='flex flex-col'>
+      <EmailAddressTable listId={selectedList.id} />
+
+      {/* <div className='flex flex-col'>
         <div className='-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8'>
           <div className='py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8'>
             <div className='shadow overflow-hidden border-b border-gray-200 sm:rounded-lg'>
@@ -237,7 +225,6 @@ export function EmailAdminPage() {
                         <button
                           className='text-indigo-600 hover:text-indigo-900'
                           onClick={() => {
-                            setEmail(email.address)
                             setPriorEmail(email.address)
                             setEmailEditIsOpen(true)
                           }}
@@ -260,218 +247,32 @@ export function EmailAdminPage() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
-      <Transition show={listAddIsOpen} as={Fragment}>
-        <Dialog
-          as='div'
-          className='fixed inset-0 z-10 overflow-y-auto'
-          onClose={handleListAddCancel}
-        >
-          <div className='min-h-screen px-4 text-center'>
-            <Transition.Child
-              as={Fragment}
-              enter='ease-out duration-300'
-              enterFrom='opacity-0'
-              enterTo='opacity-100'
-              leave='ease-in duration-200'
-              leaveFrom='opacity-100'
-              leaveTo='opacity-0'
-            >
-              <Dialog.Overlay className='fixed inset-0 bg-gray-900 bg-opacity-50' />
-            </Transition.Child>
+      <AddEditDialog
+        isOpen={listAddIsOpen}
+        titleContent='Add a new Distribution List'
+        label='List name'
+        onClose={() => setListAddIsOpen(false)}
+        onSubmit={handleListAddSubmit}
+      />
 
-            <Transition.Child
-              as={Fragment}
-              enter='ease-out duration-300'
-              enterFrom='opacity-0 scale-95'
-              enterTo='opacity-100 scale-100'
-              leave='ease-in duration-200'
-              leaveFrom='opacity-100 scale-100'
-              leaveTo='opacity-0 scale-95'
-            >
-              <div className='inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl'>
-                <Dialog.Title
-                  as='h3'
-                  className='text-lg font-medium leading-6 text-gray-900'
-                >
-                  Add a new Distribution List
-                </Dialog.Title>
+      <AddEditDialog
+        isOpen={emailAddIsOpen}
+        titleContent='Add a new email address'
+        label='Email address'
+        onClose={handleEmailAddCancel}
+        onSubmit={handleEmailAddSubmit}
+      />
 
-                <label className='block my-6'>
-                  <span className='text-gray-700'>List name</span>
-                  <input
-                    type='text'
-                    className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-indigo-blue-500 focus:ring-opacity-50'
-                    value={listName}
-                    onChange={(e) => setListName(e.target.value)}
-                  />
-                </label>
-
-                <div className='mt-4 flex justify-end'>
-                  <button
-                    type='button'
-                    className='mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0  sm:w-auto sm:text-sm'
-                    onClick={handleListAddCancel}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type='button'
-                    className='inline-flex justify-center px-4 py-2 text-sm font-medium text-blue-900 bg-blue-100 border border-transparent rounded-md sm:ml-3 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500'
-                    onClick={() => handleListAddSubmit(listName)}
-                  >
-                    Submit
-                  </button>
-                </div>
-              </div>
-            </Transition.Child>
-          </div>
-        </Dialog>
-      </Transition>
-
-      <Transition show={emailAddIsOpen} as={Fragment}>
-        <Dialog
-          as='div'
-          className='fixed inset-0 z-10 overflow-y-auto'
-          onClose={handleEmailAddCancel}
-        >
-          <div className='min-h-screen px-4 text-center'>
-            <Transition.Child
-              as={Fragment}
-              enter='ease-out duration-300'
-              enterFrom='opacity-0'
-              enterTo='opacity-100'
-              leave='ease-in duration-200'
-              leaveFrom='opacity-100'
-              leaveTo='opacity-0'
-            >
-              <Dialog.Overlay className='fixed inset-0 bg-gray-900 bg-opacity-50' />
-            </Transition.Child>
-
-            <Transition.Child
-              as={Fragment}
-              enter='ease-out duration-300'
-              enterFrom='opacity-0 scale-95'
-              enterTo='opacity-100 scale-100'
-              leave='ease-in duration-200'
-              leaveFrom='opacity-100 scale-100'
-              leaveTo='opacity-0 scale-95'
-            >
-              <div className='inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl'>
-                <Dialog.Title
-                  as='h3'
-                  className='text-lg font-medium leading-6 text-gray-900'
-                >
-                  Add a new email address
-                </Dialog.Title>
-
-                <form onSubmit={handleEmailAddSubmit}>
-                  <label className='block my-6'>
-                    <span className='text-gray-700'>Email address</span>
-                    <input
-                      name='email'
-                      type='email'
-                      multiple
-                      required
-                      className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-indigo-blue-500 focus:ring-opacity-50'
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </label>
-
-                  <div className='mt-4 flex justify-end'>
-                    <button
-                      type='button'
-                      className='mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0  sm:w-auto sm:text-sm'
-                      onClick={handleEmailAddCancel}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type='submit'
-                      className='inline-flex justify-center px-4 py-2 text-sm font-medium text-blue-900 bg-blue-100 border border-transparent rounded-md sm:ml-3 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500'
-                    >
-                      Submit
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </Transition.Child>
-          </div>
-        </Dialog>
-      </Transition>
-
-      <Transition show={emailEditIsOpen} as={Fragment}>
-        <Dialog
-          as='div'
-          className='fixed inset-0 z-10 overflow-y-auto'
-          onClose={handleEmailEditCancel}
-        >
-          <div className='min-h-screen px-4 text-center'>
-            <Transition.Child
-              as={Fragment}
-              enter='ease-out duration-300'
-              enterFrom='opacity-0'
-              enterTo='opacity-100'
-              leave='ease-in duration-200'
-              leaveFrom='opacity-100'
-              leaveTo='opacity-0'
-            >
-              <Dialog.Overlay className='fixed inset-0 bg-gray-900 bg-opacity-50' />
-            </Transition.Child>
-
-            <Transition.Child
-              as={Fragment}
-              enter='ease-out duration-300'
-              enterFrom='opacity-0 scale-95'
-              enterTo='opacity-100 scale-100'
-              leave='ease-in duration-200'
-              leaveFrom='opacity-100 scale-100'
-              leaveTo='opacity-0 scale-95'
-            >
-              <div className='inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl'>
-                <Dialog.Title
-                  as='h3'
-                  className='text-lg font-medium leading-6 text-gray-900'
-                >
-                  Edit email address
-                </Dialog.Title>
-
-                <form onSubmit={handleEmailEditSubmit}>
-                  <label className='block my-6'>
-                    <span className='text-gray-700'>Email address</span>
-                    <input
-                      name='email'
-                      type='email'
-                      required
-                      className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-indigo-blue-500 focus:ring-opacity-50'
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </label>
-
-                  <div className='mt-4 flex justify-end'>
-                    <button
-                      type='button'
-                      className='mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0  sm:w-auto sm:text-sm'
-                      onClick={handleEmailEditCancel}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type='submit'
-                      className='inline-flex justify-center px-4 py-2 text-sm font-medium text-blue-900 bg-blue-100 border border-transparent rounded-md sm:ml-3 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500'
-                    >
-                      Submit
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </Transition.Child>
-          </div>
-        </Dialog>
-      </Transition>
+      <AddEditDialog
+        isOpen={emailEditIsOpen}
+        titleContent='Edit email address'
+        label='Email address'
+        onClose={handleEmailEditCancel}
+        onSubmit={handleEmailEditSubmit}
+        initialValue={priorEmail}
+      />
     </main>
   )
 }
