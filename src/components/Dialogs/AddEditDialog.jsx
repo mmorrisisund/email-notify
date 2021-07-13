@@ -15,7 +15,7 @@ function AddEditDialog({
   useEffect(() => setText(initialValue), [initialValue])
 
   const handleClose = () => {
-    setText('')
+    initialValue ? setText(initialValue) : setText('')
     onClose()
   }
 
