@@ -1,30 +1,17 @@
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from 'react-query'
+import { useMutation, useQueryClient } from 'react-query'
 import axios from 'axios'
 
 import AddEditDialog from 'components/Dialogs/AddEditDialog'
+import { useEmailLists, useAddEmailList } from 'hooks/email'
 
 function EmailListTable({ onListChange }) {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedList, setSelectedList] = useState(undefined)
   const queryClient = useQueryClient()
-  const {
-    data: lists,
-    isLoading,
-    isError,
-  } = useQuery('lists', async () => {
-    const { data } = await axios.get('/lists')
-    return data
-  })
+  const { data: lists, isLoading, isError } = useEmailLists()
+  const addMutation = useAddEmailList()
 
-  const addListMutation = useMutation(
-    async (newList) => await axios.post('/lists', newList),
-    {
-      onSuccess: ({ data }) => {
-        queryClient.setQueryData(['lists'], (oldData) => [...oldData, data])
-      },
-    }
-  )
   const removeListMutation = useMutation((id) => axios.delete(`/lists/${id}`), {
     onSuccess: (data, vars) => {
       queryClient.setQueryData(['lists'], (oldData) =>
@@ -47,7 +34,7 @@ function EmailListTable({ onListChange }) {
 
   const handleSubmit = (name) => {
     setIsOpen(false)
-    addListMutation.mutate({ name, addresses: [] })
+    addMutation.mutate(name)
   }
 
   return (

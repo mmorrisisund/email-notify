@@ -9,7 +9,7 @@ export function EmailAdminPage() {
   return (
     <main className='grid grid-cols-2 max-w-8xl mx-8 space-x-16 py-8'>
       <EmailListTable onListChange={setSelectedList} />
-      <EmailAddressTable listId={selectedList} />
+      {selectedList && <EmailAddressTable listId={selectedList} />}
     </main>
   )
 }

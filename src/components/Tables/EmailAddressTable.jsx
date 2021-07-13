@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from 'react-query'
-import axios from 'axios'
 
 import AddEditDialog from 'components/Dialogs/AddEditDialog'
+import { useEmailList, useUpdateEmailList } from 'hooks/email'
 
 const getId = () => Math.round(Math.random() * 10000)
 
@@ -10,22 +9,8 @@ function EmailAddressTable({ listId }) {
   const [addIsOpen, setAddIsOpen] = useState(false)
   const [editIsOpen, setEditIsOpen] = useState(false)
   const [priorEmail, setPriorEmail] = useState('')
-  const queryClient = useQueryClient()
-  const { data: list } = useQuery(['lists', listId], async () => {
-    const { data } = await axios.get(`/lists/${listId}`)
-    return data
-  })
-  const updateListMutation = useMutation(
-    async (list) => {
-      const { data } = await axios.put(`lists/${list.id}`, list)
-      return data
-    },
-    {
-      onSuccess: (_, vars) => {
-        queryClient.setQueryData(['lists', vars.id], () => vars)
-      },
-    }
-  )
+  const { data: list } = useEmailList(listId)
+  const updateMutation = useUpdateEmailList()
 
   const handleAddSubmit = (value) => {
     const emails = value.split(',')
@@ -40,7 +25,7 @@ function EmailAddressTable({ listId }) {
         ...list,
         addresses: [...list.addresses, ...newAddresses],
       }
-      updateListMutation.mutate(newList)
+      updateMutation.mutate(newList)
     }
 
     setAddIsOpen(false)
@@ -54,7 +39,7 @@ function EmailAddressTable({ listId }) {
   const handleEmailRemove = (id) => {
     const newEmailList = list.addresses.filter((email) => email.id !== id)
     const newList = { ...list, addresses: newEmailList }
-    updateListMutation.mutate(newList)
+    updateMutation.mutate(newList)
   }
   const handleEditSubmit = (prevValue, newValue) => {
     const email = newValue
@@ -65,7 +50,7 @@ function EmailAddressTable({ listId }) {
     const newAddresses = [...list.addresses]
     newAddresses.splice(emailIndex, 1, newEmail)
     const newList = { ...list, addresses: newAddresses }
-    updateListMutation.mutate(newList)
+    updateMutation.mutate(newList)
 
     setEditIsOpen(false)
   }
