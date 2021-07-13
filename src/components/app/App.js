@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from 'react-query'
+import { ReactQueryDevtools } from 'react-query/devtools'
 
 import { HomePage, TemplatesPage, EmailAdminPage } from 'pages'
 import { Layout } from 'components/Layout'
@@ -17,6 +18,7 @@ export function App() {
             <Route exact path='/email-admin' component={EmailAdminPage} />
           </Switch>
         </Layout>
+        <ReactQueryDevtools />
       </QueryClientProvider>
     </Router>
   )
