@@ -11,11 +11,7 @@ function EmailAddressTable({ listId }) {
   const [editIsOpen, setEditIsOpen] = useState(false)
   const [priorEmail, setPriorEmail] = useState('')
   const queryClient = useQueryClient()
-  const {
-    data: list,
-    isLoading,
-    isError,
-  } = useQuery(['lists', listId], async () => {
+  const { data: list } = useQuery(['lists', listId], async () => {
     const { data } = await axios.get(`/lists/${listId}`)
     return data
   })
