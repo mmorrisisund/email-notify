@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 
 function Header() {
   return (
-    <header className='h-24 flex items-center justify-between p-8'>
+    <header className='h-24 flex items-center justify-between p-8 shadow'>
       <div>
         <h1 className='text-blue-400 text-4xl'>Principal</h1>
       </div>
