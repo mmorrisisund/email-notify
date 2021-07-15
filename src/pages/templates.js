@@ -1,13 +1,13 @@
 export function TemplatesPage() {
   return (
-    <main className='py-8'>
-      <div className='flex max-w-5xl mx-auto  '>
+    <main className='p-8'>
+      <div className='flex max-w-7xl'>
         <div className='flex-grow'>
-          <div>
-            <label className='block text-gray-700 font-medium'>
+          <div className='pr-12'>
+            <label className='block mb-4 text-sm text-gray-700 font-medium'>
               Pick a Template
             </label>
-            <select>
+            <select className='w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500'>
               <option>Template 1</option>
               <option>Template 2</option>
               <option>Template 3</option>
@@ -17,8 +17,8 @@ export function TemplatesPage() {
         <div className='flex-grow max-w-3xl'>
           <form>
             <div className='space-y-12'>
-              <div className='grid grid-cols-2'>
-                <label className='font-medium text-gray-700'>
+              <div className='grid grid-cols-form'>
+                <label className='font-medium text-sm text-gray-700'>
                   Template Name
                 </label>
                 <input
@@ -27,28 +27,43 @@ export function TemplatesPage() {
                 />
               </div>
               <hr className='col-span-2' />
-              <div className='grid grid-cols-2'>
-                <label>From</label>
-                <input type='text' className='rounded border-gray-300' />
+              <div className='grid grid-cols-form'>
+                <label className='font-medium text-sm text-gray-700'>
+                  From
+                </label>
+                <input
+                  type='text'
+                  className='rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                />
               </div>
               <hr className='col-span-2' />
-              <div className='grid grid-cols-2'>
-                <label>To</label>
-                <select className='rounded border-gray-300'>
+              <div className='grid grid-cols-form'>
+                <label className='font-medium text-sm text-gray-700'>To</label>
+                <select className='rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500'>
                   <option>Shareholder Notification</option>
                   <option>Late Pricing</option>
                   <option>Price Error</option>
                 </select>
               </div>
               <hr className='col-span-2' />
-              <div className='grid grid-cols-2'>
-                <label>Subject</label>
-                <input type='text' className='rounded border-gray-300' />
+              <div className='grid grid-cols-form'>
+                <label className='font-medium text-sm text-gray-700'>
+                  Subject
+                </label>
+                <input
+                  type='text'
+                  className='rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                />
               </div>
               <hr className='col-span-2' />
-              <div className='grid grid-cols-2'>
-                <label>Body</label>
-                <textarea className='rounded border-gray-300'></textarea>
+              <div className='grid grid-cols-form'>
+                <label className='font-medium text-sm text-gray-700'>
+                  Body
+                </label>
+                <textarea
+                  className='rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                  rows='5'
+                ></textarea>
               </div>
               <hr className='col-span-2' />
             </div>
