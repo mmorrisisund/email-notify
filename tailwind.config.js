@@ -7,6 +7,9 @@ module.exports = {
       gridTemplateRows: {
         layout: '96px 1fr 40px',
       },
+      gridTemplateColumns: {
+        form: '200px 1fr',
+      },
     },
   },
   variants: {
