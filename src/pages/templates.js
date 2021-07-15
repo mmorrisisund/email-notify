@@ -3,7 +3,7 @@ export function TemplatesPage() {
     <main className='p-8'>
       <div className='flex max-w-7xl'>
         <div className='flex-grow'>
-          <div className='pr-12'>
+          <div className=''>
             <label className='block mb-4 text-sm text-gray-700 font-medium'>
               Pick a Template
             </label>
@@ -14,11 +14,14 @@ export function TemplatesPage() {
             </select>
           </div>
         </div>
+
+        <div className='w-px mx-8 bg-gray-200' />
+
         <div className='flex-grow max-w-3xl'>
           <form>
             <div className='space-y-12'>
               <div className='grid grid-cols-form'>
-                <label className='font-medium text-sm text-gray-700'>
+                <label className='ml-4 font-medium text-sm text-gray-700'>
                   Template Name
                 </label>
                 <input
@@ -28,7 +31,7 @@ export function TemplatesPage() {
               </div>
               <hr className='col-span-2' />
               <div className='grid grid-cols-form'>
-                <label className='font-medium text-sm text-gray-700'>
+                <label className='ml-4 font-medium text-sm text-gray-700'>
                   From
                 </label>
                 <input
@@ -38,7 +41,9 @@ export function TemplatesPage() {
               </div>
               <hr className='col-span-2' />
               <div className='grid grid-cols-form'>
-                <label className='font-medium text-sm text-gray-700'>To</label>
+                <label className='ml-4 font-medium text-sm text-gray-700'>
+                  To
+                </label>
                 <select className='rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500'>
                   <option>Shareholder Notification</option>
                   <option>Late Pricing</option>
@@ -47,7 +52,7 @@ export function TemplatesPage() {
               </div>
               <hr className='col-span-2' />
               <div className='grid grid-cols-form'>
-                <label className='font-medium text-sm text-gray-700'>
+                <label className='ml-4 font-medium text-sm text-gray-700'>
                   Subject
                 </label>
                 <input
@@ -57,7 +62,7 @@ export function TemplatesPage() {
               </div>
               <hr className='col-span-2' />
               <div className='grid grid-cols-form'>
-                <label className='font-medium text-sm text-gray-700'>
+                <label className='ml-4 font-medium text-sm text-gray-700'>
                   Body
                 </label>
                 <textarea
