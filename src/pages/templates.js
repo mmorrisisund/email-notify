@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { RadioGroup } from '@headlessui/react'
+import { useForm } from 'react-hook-form'
+
 import { useEmailLists } from 'hooks/email'
+import { useTemplates, useAddTemplate, useTemplateById } from 'hooks/template'
 
 const modes = [
   { label: 'New', description: 'Create a new template' },
@@ -9,7 +12,26 @@ const modes = [
 
 export function TemplatesPage() {
   const [mode, setMode] = useState('')
-  const { data: lists, isLoading } = useEmailLists()
+  const [templateId, setTemplateId] = useState()
+  const { register, handleSubmit, reset } = useForm()
+  const { data: lists, isLoading: listsIsLoading } = useEmailLists()
+  const { data: templates, isLoading: templatesIsLoading } = useTemplates()
+  const { data: template, isLoading: templateIsLoading } =
+    useTemplateById(templateId)
+  const addTemplateMutation = useAddTemplate()
+  console.log(template)
+  const handleOnSubmit = async (data) => {
+    try {
+      await addTemplateMutation.mutateAsync(data)
+      reset()
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const templateSelectionChanged = (e) => {
+    setTemplateId(e.target.value)
+  }
 
   return (
     <main className='p-8'>
@@ -70,10 +92,16 @@ export function TemplatesPage() {
               <label className='block mb-4 text-sm text-gray-700 font-medium'>
                 Pick a Template
               </label>
-              <select className='w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500'>
-                <option>Template 1</option>
-                <option>Template 2</option>
-                <option>Template 3</option>
+              <select
+                className='w-full rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                onChange={templateSelectionChanged}
+              >
+                {!templatesIsLoading &&
+                  templates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.templateName}
+                    </option>
+                  ))}
               </select>
             </div>
           )}
@@ -83,7 +111,7 @@ export function TemplatesPage() {
 
         <div className='flex-grow max-w-3xl'>
           {mode !== '' && (
-            <form>
+            <form onSubmit={handleSubmit(handleOnSubmit)}>
               <div className='space-y-12'>
                 <div className='grid grid-cols-form'>
                   <label className='ml-4 font-medium text-sm text-gray-700'>
@@ -92,6 +120,7 @@ export function TemplatesPage() {
                   <input
                     type='text'
                     className='rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    {...register('templateName', { required: true })}
                   />
                 </div>
                 <hr className='col-span-2' />
@@ -102,6 +131,7 @@ export function TemplatesPage() {
                   <input
                     type='text'
                     className='rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    {...register('fromAddress', { required: true })}
                   />
                 </div>
                 <hr className='col-span-2' />
@@ -109,10 +139,13 @@ export function TemplatesPage() {
                   <label className='ml-4 font-medium text-sm text-gray-700'>
                     To
                   </label>
-                  <select className='rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500'>
-                    {!isLoading &&
+                  <select
+                    className='rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    {...register('emailList')}
+                  >
+                    {!listsIsLoading &&
                       lists.map((list) => (
-                        <option key={list.id} value={list.id}>
+                        <option key={list.id} value={list.name}>
                           {list.name}
                         </option>
                       ))}
@@ -126,6 +159,7 @@ export function TemplatesPage() {
                   <input
                     type='text'
                     className='rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    {...register('subject', { required: true })}
                   />
                 </div>
                 <hr className='col-span-2' />
@@ -136,6 +170,7 @@ export function TemplatesPage() {
                   <textarea
                     className='rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                     rows='5'
+                    {...register('body', { required: true })}
                   ></textarea>
                 </div>
                 <hr className='col-span-2' />
